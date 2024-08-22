@@ -13,7 +13,7 @@ import { buildCookie, parseCookies } from "./cookies.ts";
 import { withHtmlLiveReload } from "./hot-reload.ts";
 import { logger } from "./logger.ts";
 
-const PATHS = <const>["/", "/enter-password"];
+const PATHS = <const>["/", "/enter-password", "/rsvp"];
 type Path = (typeof PATHS)[number];
 
 class ServerError extends Error {
@@ -23,6 +23,32 @@ class ServerError extends Error {
 		this.code = code;
 	}
 }
+
+function buildPasswordView(badPassword = false) {
+	const $password = cheerio.load(PASSWORD_TEMPLATE);
+	const passwordView = $password("#password-view");
+	if (badPassword) {
+		const badPassword = $password("#bad-password");
+		passwordView.append(badPassword);
+	}
+	return passwordView;
+}
+
+async function buildPartyInfoPage(hasRsvp: boolean) {
+	const $info = cheerio.load(INFO_TEMPLATE);
+  const $rsvp = cheerio.load(RSVP_TEMPLATE);
+	const partyPage = $info("#party-page");
+	if (hasRsvp) {
+    const rsvpReminder = $rsvp("#rsvp-reminder")
+    partyPage.append(rsvpReminder)
+	} else {
+    const rsvpForm = $rsvp("#rsvp-form");
+		partyPage.append(rsvpForm);
+  }
+	return partyPage;
+}
+
+async function handleRsvp(form: FormData) {}
 
 async function handler(pathname: string, req: Request): Promise<Response> {
 	if (!PATHS.includes(pathname as Path)) {
@@ -36,8 +62,9 @@ async function handler(pathname: string, req: Request): Promise<Response> {
 				cookies[CONFIG.COOKIE_NAME] &&
 				cookies[CONFIG.COOKIE_NAME] === CONFIG.PARTY.password
 			) {
-				const $info = cheerio.load(INFO_TEMPLATE);
-				$index("main").html($info("#party-page"));
+				const hasRsvp =
+					!!cookies[CONFIG.RSVP_COOKIE] && Boolean(cookies[CONFIG.RSVP_COOKIE]);
+				$index("main").html(await buildPartyInfoPage(hasRsvp));
 				return new Response($index.root().html(), {
 					headers: {
 						"Content-Type": "text/html",
@@ -46,10 +73,8 @@ async function handler(pathname: string, req: Request): Promise<Response> {
 					},
 				});
 			}
-			const $password = cheerio.load(PASSWORD_TEMPLATE);
 			$index("head > title").text(CONFIG.PARTY.name);
-			const passwordView = $password("#password-view");
-			$index("main").html(passwordView);
+			$index("main").html(buildPasswordView());
 			return new Response($index.root().html(), {
 				headers: {
 					"Content-Type": "text/html",
@@ -64,20 +89,28 @@ async function handler(pathname: string, req: Request): Promise<Response> {
 			const form = await req.formData();
 			const submittedPassword = form.get("password");
 			if (!submittedPassword || submittedPassword !== CONFIG.PARTY.password) {
-				const $password = cheerio.load(PASSWORD_TEMPLATE);
-				const passwordView = $password("#password-view");
-				const badPassword = $password("#bad-password");
-				passwordView.append(badPassword);
+				const passwordView = buildPasswordView(true);
 				return new Response(passwordView.prop("outerHTML"), {
 					headers: { "Content-Type": "text/html" },
 				});
 			}
-			const $info = cheerio.load(INFO_TEMPLATE);
-			return new Response($info("#party-page").html(), {
+      const cookies = parseCookies(req);
+      const hasRsvp = !!cookies[CONFIG.RSVP_COOKIE] && Boolean(cookies[CONFIG.RSVP_COOKIE]);
+			return new Response((await buildPartyInfoPage(hasRsvp)).html(), {
 				headers: {
 					"Content-Type": "text/html",
 					"Set-Cookie": buildCookie(),
 				},
+			});
+		}
+		case "/rsvp": {
+			if (req.method !== "POST") {
+				throw new ServerError(405, "Method not allowed");
+			}
+			const form = await req.formData();
+			await handleRsvp(form);
+			return new Response((await buildPartyInfoPage(false)).html(), {
+				headers: { "Content-Type": "text/html" },
 			});
 		}
 		default:
@@ -109,6 +142,7 @@ const serverOptions = (): ServeOptions => ({
 			});
 		}
 		logger("error", `Unexpexted Error ${err.message}`);
+		return new Response(err.message, { status: 500 });
 	},
 });
 

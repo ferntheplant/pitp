@@ -1,5 +1,10 @@
+const kebabCase = (str: string) =>
+	str
+		.replace(/([a-z])([A-Z])/g, "$1-$2")
+		.replace(/[\s_]+/g, "-")
+		.toLowerCase();
+
 // TODO: set these via env variables with runtime validation
-// TODO: fix relative filepaths to be w.r.t. project root rather than main.ts
 const DEBUG = true;
 
 type Party = {
@@ -22,7 +27,8 @@ const partyConfig: Party = {
 
 const config = <const>{
 	SERVICE_NAME: "pitp",
-	COOKIE_NAME: `pitp-${partyConfig.name}`,
+	COOKIE_NAME: `pitp-${kebabCase(partyConfig.name)}`,
+	RSVP_COOKIE: `pitp-rsvp-${kebabCase(partyConfig.name)}`,
 	VERSION: "0.0.1",
 	DEBUG: DEBUG,
 	LOG_LEVEL: DEBUG ? "debug" : "info",

@@ -19,9 +19,10 @@ export function parseCookies(request: Request): Cookie {
 	return list;
 }
 
-export function buildCookie() {
+export function buildCookie(rsvp = false) {
 	return [
 		`${CONFIG.COOKIE_NAME}=${CONFIG.PARTY.password}`,
+		`${CONFIG.RSVP_COOKIE}=${rsvp}`,
 		"HttpOnly",
 		"Max-Age=900000",
 		"SameSite=Strict",
