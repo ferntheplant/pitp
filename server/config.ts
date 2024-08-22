@@ -1,40 +1,40 @@
 const kebabCase = (str: string) =>
-	str
-		.replace(/([a-z])([A-Z])/g, "$1-$2")
-		.replace(/[\s_]+/g, "-")
-		.toLowerCase();
+  str
+    .replace(/([a-z])([A-Z])/g, "$1-$2")
+    .replace(/[\s_]+/g, "-")
+    .toLowerCase();
 
 // TODO: set these via env variables with runtime validation
 const DEBUG = true;
 
 type Party = {
-	name: string;
-	start: Date;
-	end?: Date;
-	location: string;
-	description?: string;
-	password: string;
+  name: string;
+  start: Date;
+  end?: Date;
+  location: string;
+  description?: string;
+  password: string;
 };
 
 const partyConfig: Party = {
-	name: "Test party",
-	start: new Date("11/11/2011"),
-	end: new Date("12/12/2012"),
-	location: "Ur moms house",
-	description: "gang gang",
-	password: "urmom69",
+  name: "Test party",
+  start: new Date("11/11/2011"),
+  end: new Date("12/12/2012"),
+  location: "Ur moms house",
+  description: "gang gang",
+  password: "urmom69",
 };
 
 const config = <const>{
-	SERVICE_NAME: "pitp",
-	COOKIE_NAME: `pitp-${kebabCase(partyConfig.name)}`,
-	RSVP_COOKIE: `pitp-rsvp-${kebabCase(partyConfig.name)}`,
-	VERSION: "0.0.1",
-	DEBUG: DEBUG,
-	LOG_LEVEL: DEBUG ? "debug" : "info",
-	PORT: 8080,
-	HOSTNAME: "localhost",
-	PARTY: partyConfig,
+  SERVICE_NAME: "pitp",
+  COOKIE_NAME: `pitp-${kebabCase(partyConfig.name)}`,
+  RSVP_COOKIE: `pitp-rsvp-${kebabCase(partyConfig.name)}`,
+  VERSION: "0.0.1",
+  DEBUG: DEBUG,
+  LOG_LEVEL: DEBUG ? "debug" : "info",
+  PORT: 8080,
+  HOSTNAME: "localhost",
+  PARTY: partyConfig,
 };
 Object.freeze(config);
 
