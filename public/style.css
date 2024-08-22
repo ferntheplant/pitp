@@ -1,0 +1,218 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap");
+
+:root {
+  --width: 720px;
+  --font-main: "Roboto Mono", monospace;
+  --font-secondary: "Roboto Mono", monospace;
+  --font-scale: 1em;
+  --link-color: #339af0;
+  --visited-color: #232333;
+  --blockquote-color: #222;
+  --main-color: #ffa86a;
+
+  --background-color: #fff8f0;
+  --heading-color: #000;
+  --text-color: #2c201a;
+  --code-background-color: #8e6a06;
+  --code-color: #fff;
+  --code-block-background-color: #222;
+  --code-block-color: #f2f2f2;
+}
+
+body {
+  font-family: var(--font-secondary);
+  font-size: var(--font-scale);
+  margin: auto;
+  padding: 20px;
+  max-width: var(--width);
+  text-align: left;
+  background-color: var(--background-color);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.5;
+  color: var(--text-color);
+}
+
+::-moz-selection {
+  color: var(--code-block-color);
+  background: var(--code-block-background-color);
+}
+
+::selection {
+  color: var(--code-block-color);
+  background: var(--code-block-background-color);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-main);
+  color: var(--heading-color);
+}
+
+a {
+  color: var(--text-color);
+  font-family: var(--font-main);
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 3px solid var(--main-color);
+}
+
+a:hover {
+  background-color: var(--main-color);
+  color: var(--background-color);
+  text-decoration: none;
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  padding-bottom: 20px;
+  align-items: center;
+}
+
+.title:hover {
+  text-decoration: none;
+  background-color: var(--background-color);
+  border: none;
+}
+
+.title {
+  border: none;
+}
+
+.title h1 {
+  flex: 0.5 0;
+  margin-bottom: 0;
+}
+
+strong,
+b {
+  color: var(--heading-color);
+}
+
+button {
+  margin: 0;
+  cursor: pointer;
+}
+
+main {
+  line-height: 1.6;
+  border: 1px solid var(--main-color);
+  padding: 30px;
+}
+
+table {
+  width: 100%;
+}
+
+hr {
+  border: 0;
+  border-top: 1px dashed;
+}
+
+img {
+  max-width: 100%;
+}
+
+code {
+  font-family: monospace;
+  padding: 3px;
+  background-color: var(--code-background-color);
+  color: var(--code-color);
+  border-radius: 5px;
+}
+
+main h1 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.inline {
+  width: auto !important;
+}
+
+table {
+  border-spacing: 0;
+}
+
+th,
+td {
+  padding: 6px 13px;
+  border: 1px solid var(--code-block-background-color);
+  font-size: 1em;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-decoration: none;
+  border-bottom: none;
+  display: table;
+  margin: 0px 0px 0px 0px;
+  text-align: left;
+}
+
+h2:hover,
+h3:hover,
+h4:hover,
+h5:hover,
+h6:hover {
+  background-color: var(--main-color);
+  color: var(--background-color);
+  cursor: pointer;
+}
+
+h2:before {
+  content: "#";
+  color: var(--main-color);
+  padding-right: 0.5em;
+}
+
+h3:before {
+  content: "##";
+  color: var(--main-color);
+  padding-right: 0.5em;
+}
+
+h4:before {
+  content: "###";
+  color: var(--main-color);
+  padding-right: 0.5em;
+}
+
+h5:before {
+  content: "####";
+  color: var(--main-color);
+  padding-right: 0.5em;
+}
+
+h2:hover:before {
+  content: "#";
+  color: var(--background-color);
+  padding-right: 0.5em;
+}
+
+h3:hover:before {
+  content: "##";
+  color: var(--background-color);
+  padding-right: 0.5em;
+}
+
+h4:hover:before {
+  content: "###";
+  color: var(---background-color);
+  padding-right: 0.5em;
+}
+
+h5:hover:before {
+  content: "####";
+  color: var(--background-color);
+  padding-right: 0.5em;
+}

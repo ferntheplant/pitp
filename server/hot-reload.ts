@@ -1,15 +1,15 @@
 // taken from https://github.com/aabccd021/bun-html-live-reload
 import type {
-  Server,
-  ServerWebSocket,
-  WebSocketHandler,
-  WebSocketServeOptions,
+	Server,
+	ServerWebSocket,
+	WebSocketHandler,
+	WebSocketServeOptions,
 } from "bun";
-import { watch } from "fs";
-import path from "path";
+import { watch } from "node:fs";
+import path from "node:path";
 
 declare global {
-  var ws: ServerWebSocket<unknown> | undefined;
+	var ws: ServerWebSocket<unknown> | undefined;
 }
 
 const reloadCommand = "reload";
@@ -33,61 +33,70 @@ const makeLiveReloadScript = (wsUrl: string) => `
 `;
 
 export type PureWebSocketServeOptions<WebSocketDataType> = Omit<
-  WebSocketServeOptions<WebSocketDataType>,
-  "fetch" | "websocket"
+	WebSocketServeOptions<WebSocketDataType>,
+	"fetch" | "websocket"
 > & {
-  fetch(request: Request, server: Server): Promise<Response> | Response;
-  websocket?: WebSocketHandler<WebSocketDataType>;
+	fetch(request: Request, server: Server): Promise<Response> | Response;
+	websocket?: WebSocketHandler<WebSocketDataType>;
 };
 
 export const withHtmlLiveReload = <
-  WebSocketDataType,
-  T extends PureWebSocketServeOptions<WebSocketDataType>,
+	WebSocketDataType,
+	T extends PureWebSocketServeOptions<WebSocketDataType>,
 >(
-  serveOptions: T,
+	serveOptions: T,
 ): WebSocketServeOptions<WebSocketDataType> => {
-  const wsPath = "__bun_live_reload_websocket__";
-  const watcher = watch(path.resolve(import.meta.dir, "../public"));
+	const wsPath = "__bun_live_reload_websocket__";
+	const watchers = [
+		watch(path.resolve(import.meta.dir, "../public")),
+		watch(path.resolve(import.meta.dir, "../templates")),
+	];
 
-  return {
-    ...serveOptions,
-    fetch: async (req, server) => {
-      const reqUrl = new URL(req.url);
-      if (reqUrl.pathname === "/" + wsPath) {
-        const upgraded = server.upgrade(req);
+	return {
+		...serveOptions,
+		fetch: async (req, server) => {
+			const reqUrl = new URL(req.url);
+			if (reqUrl.pathname === `/${wsPath}`) {
+				const upgraded = server.upgrade(req);
 
-        if (!upgraded) {
-          return new Response(
-            "Failed to upgrade websocket connection for live reload",
-            { status: 400 },
-          );
-        }
-        return;
-      }
+				if (!upgraded) {
+					return new Response(
+						"Failed to upgrade websocket connection for live reload",
+						{ status: 400 },
+					);
+				}
+				return;
+			}
 
-      const response = await serveOptions.fetch(req, server);
+			const response = await serveOptions.fetch(req, server);
 
-      if (!response.headers.get("Content-Type")?.startsWith("text/html")) {
-        return response;
-      }
+			if (
+				!response.headers.get("Content-Type")?.startsWith("text/html") ||
+				response.headers.get("Is-Page") === null
+			) {
+				return response;
+			}
 
-      const originalHtml = await response.text();
-      const liveReloadScript = makeLiveReloadScript(`${reqUrl.host}/${wsPath}`);
-      const htmlWithLiveReload = originalHtml + liveReloadScript;
+			const originalHtml = await response.text();
+			const liveReloadScript = makeLiveReloadScript(`${reqUrl.host}/${wsPath}`);
+			const htmlWithLiveReload = originalHtml + liveReloadScript;
 
-      return new Response(htmlWithLiveReload, response);
-    },
-    websocket: {
-      ...serveOptions.websocket,
-      open: async (ws) => {
-        globalThis.ws = ws;
-        await serveOptions.websocket?.open?.(ws);
+			return new Response(htmlWithLiveReload, response);
+		},
+		websocket: {
+			...serveOptions.websocket,
+			open: async (ws) => {
+				globalThis.ws = ws;
+				await serveOptions.websocket?.open?.(ws);
 
-        if (watcher)
-          watcher.on("change", async () => {
-            ws.send(reloadCommand);
-          });
-      },
-    },
-  };
+				if (watchers.length) {
+					for (const watcher of watchers) {
+						watcher.on("change", async () => {
+							ws.send(reloadCommand);
+						});
+					}
+				}
+			},
+		},
+	};
 };
