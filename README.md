@@ -72,12 +72,28 @@ Open source, self-hosted Partiful alternative
 
 ## Resources
 
-- Hosting
-  - [Vercel](https://vercel.com/pricing)
-  - [Render](https://render.com/pricing)
-  - [Netlify](https://www.netlify.com/pricing/#pricing-table)
 - Mail sender
   - [SendGrid](https://sendgrid.com/en-us/pricing)
   - [Mailjet](https://www.mailjet.com/pricing/)
   - [Aha send](https://ahasend.com/pricing)
   - [Postmark](https://postmarkapp.com/pricing)
+- [Timestamp converter](https://www.timestamp-converter.com/)
+
+## Deployment
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/ferntheplant/pitp)
+
+- Targeting one click deploy with Render
+  - User needs to:
+    - Make render account
+    - TODO: make render service?
+    - Fill out environment variables
+      - see `.env.example`
+
+TODO: figure out how to deal with server failures/restarts on deploy (bad config)
+
+## Development
+
+- Using built in bun SQLite to stand in for Redis instance
+  - Write to local file `dev.sqlite` for persistence across server restarts
+  - Need to delete file to refresh RSVP list

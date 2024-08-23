@@ -1,12 +1,5 @@
-import { CONFIG } from "./config.ts";
+import type { Config, LogLevel } from "./config";
 
-export type LogLevel =
-  | "everything"
-  | "debug"
-  | "info"
-  | "warn"
-  | "error"
-  | "fatal";
 const LogPriorities: Record<LogLevel, number> = <const>{
   fatal: -1,
   error: 0,
@@ -17,13 +10,21 @@ const LogPriorities: Record<LogLevel, number> = <const>{
 };
 Object.freeze(LogPriorities);
 
-export function logger(level: LogLevel, message: string, rest?: unknown): void {
-  const givenPriority = LogPriorities[level];
-  if (givenPriority <= LogPriorities[CONFIG.LOG_LEVEL]) {
-    console.log(
-      `${new Date().toISOString()} [${CONFIG.SERVICE_NAME}-${CONFIG.VERSION}] ${level}: ${message}${
-        rest ? ` ${JSON.stringify(rest)}` : ""
-      }`,
-    );
-  }
+export function makeLogger(config: Config) {
+  return function logger(
+    level: LogLevel,
+    message: string,
+    rest?: unknown,
+  ): void {
+    const givenPriority = LogPriorities[level];
+    if (givenPriority <= LogPriorities[config.LOG_LEVEL]) {
+      console.log(
+        `${new Date().toISOString()} [${config.SERVICE_NAME}-${config.VERSION}] ${level}: ${message}${
+          rest ? ` ${JSON.stringify(rest)}` : ""
+        }`,
+      );
+    }
+  };
 }
+
+export type Logger = ReturnType<typeof makeLogger>;

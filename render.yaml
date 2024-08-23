@@ -1,0 +1,38 @@
+services:
+  - type: web
+    plan: free
+    name: party-in-the-party
+    runtime: bun
+    buildCommand: "bun install"
+    startCommand: "bun run server/index.ts"
+    envVars:
+      - key: BUN_VERSION
+        value: 1.1.7
+      - key: REDIS_URL
+        fromService:
+          name: redis
+          type: redis
+          property: connectionString
+      - key: DEBUG
+        value: false
+      - key: LOG_LEVEL
+        value: "info"
+      - key: HOSTNAME
+        sync: false # set from your render dashboard (if applicable)
+      - key: PARTY_NAME
+        sync: false # set from your render dashboard
+      - key: PARTY_START
+        sync: false # set from your render dashboard
+      - key: PARTY_END
+        sync: false # set from your render dashboard
+      - key: PARTY_LOCATION
+        sync: false # set from your render dashboard
+      - key: PARTY_DESCRIPTION
+        sync: false # set from your render dashboard
+      - key: PARTY_PASSWORD
+        sync: false # set from your render dashboard
+      - key: ADMIN_PASSWORD
+        sync: false # set form your render dashboard
+  - type: redis
+    plan: free
+    name: redis

@@ -1,4 +1,4 @@
-import { CONFIG } from "./config";
+import type { Config } from "./config";
 
 type Cookie = Record<string, string>;
 
@@ -19,10 +19,10 @@ export function parseCookies(request: Request): Cookie {
   return list;
 }
 
-export function buildCookie(rsvp = false) {
+export function buildCookie(config: Config, rsvp = false) {
   return [
-    `${CONFIG.COOKIE_NAME}=${CONFIG.PARTY.password}`,
-    `${CONFIG.RSVP_COOKIE}=${rsvp}`,
+    `${config.COOKIE_NAME}=${config.PARTY.password}`,
+    `${config.RSVP_COOKIE}=${rsvp}`,
     "HttpOnly",
     "Max-Age=900000",
     "SameSite=Strict",
