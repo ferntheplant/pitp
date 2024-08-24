@@ -25,5 +25,6 @@ export function makeDevDb(): Db {
       const raw = readQuery.all() as { data: string }[];
       return raw.map((item) => parseRsvp(item.data));
     },
+    close: async () => db.close(),
   };
 }

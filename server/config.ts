@@ -37,6 +37,14 @@ function parseDate(str: string | undefined): Date | undefined {
   return asDate;
 }
 
+function parseDateRequired(str: string): Date {
+  const asDate = new Date(str);
+  if (Number.isNaN(asDate)) {
+    throw new Error(`Malformed date string: ${str}`);
+  }
+  return asDate;
+}
+
 function parseLogLevel(str: string): LogLevel {
   // @ts-expect-error
   if (LOG_LEVELS.includes(str)) {
@@ -58,7 +66,7 @@ type Party = {
 export function makeConfig() {
   const partyConfig: Party = {
     name: parseEnvVarRequired("PARTY_NAME"),
-    start: parseDate(parseEnvVarRequired("PARTY_START")) || new Date(), // TODO: this is stupid
+    start: parseDateRequired(parseEnvVarRequired("PARTY_START")),
     end: parseDate(parseEnvVar("PARTY_END")),
     location: parseEnvVarRequired("PARTY_LOCATION"),
     description: parseEnvVar("PARTY_DESCRIPTION"),

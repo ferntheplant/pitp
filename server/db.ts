@@ -13,11 +13,16 @@ export type Rsvp = {
 export type Db = {
   addRsvp: (rsvp: Rsvp) => Promise<void>;
   getRsvps: () => Promise<Rsvp[]>;
+  close: () => Promise<void>;
 };
 
 export function parseRsvp(raw: string): Rsvp {
-  const asObj = JSON.parse(raw); // TODO: error handling
-  return asObj as Rsvp;
+  try {
+    const asObj = JSON.parse(raw);
+    return asObj as Rsvp;
+  } catch (err) {
+    throw new Error(`Unexpected error parsing RSVP: ${raw}`);
+  }
 }
 
 export function encodeRsvp(rsvp: Rsvp): string {
@@ -26,7 +31,6 @@ export function encodeRsvp(rsvp: Rsvp): string {
 
 export async function makeDb(config: Config, logger: Logger): Promise<Db> {
   const client = await createClient({ url: config.REDIS_URL })
-    // TODO: on error shutdown server?
     .on("error", (err) => logger("error", "Redis client error:", err))
     .connect();
   async function addRsvp(rsvp: Rsvp) {
@@ -39,5 +43,8 @@ export async function makeDb(config: Config, logger: Logger): Promise<Db> {
   return {
     addRsvp,
     getRsvps,
+    close: async () => {
+      await client.quit();
+    },
   };
 }
