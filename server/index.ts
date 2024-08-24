@@ -10,15 +10,10 @@ import * as cheerio from "cheerio";
 
 import { type Config, makeConfig } from "./config.ts";
 import { buildCookie, parseCookies } from "./cookies.ts";
+import { type Db, type Rsvp, makeDb } from "./db.ts";
 import { makeDevDb } from "./dev-db.ts";
 import { withHtmlLiveReload } from "./hot-reload.ts";
 import { type Logger, makeLogger } from "./logger.ts";
-import { type Db, makeRedis } from "./prod-db.ts";
-
-const RSVP_KEY = "rsvp";
-
-const PATHS = <const>["/", "/enter-password", "/rsvp"];
-type Path = (typeof PATHS)[number];
 
 class ServerError extends Error {
   code: number;
@@ -27,12 +22,6 @@ class ServerError extends Error {
     this.code = code;
   }
 }
-
-type Rsvp = {
-  name: string;
-  email: string;
-  message?: string;
-};
 
 function buildPasswordView(badPassword = false) {
   const $password = cheerio.load(PASSWORD_TEMPLATE);
@@ -44,20 +33,11 @@ function buildPasswordView(badPassword = false) {
   return passwordView;
 }
 
-function parseRsvp(raw: string): Rsvp {
-  const asObj = JSON.parse(raw); // TODO: error handling
-  return asObj as Rsvp;
-}
-
-function encodeRsvp(rsvp: Rsvp): string {
-  return JSON.stringify(rsvp);
-}
-
 async function buildPartyInfoPage(ctx: Context, hasRsvp: boolean) {
   const $info = cheerio.load(INFO_TEMPLATE);
   const $rsvp = cheerio.load(RSVP_TEMPLATE);
   const partyPage = $info("#party-page");
-  const rsvps = (await ctx.db.LRANGE(RSVP_KEY, 0, -1)).map(parseRsvp);
+  const rsvps = await ctx.db.getRsvps();
   // TODO: build RSVP divs and append to correct element
   if (hasRsvp) {
     const rsvpReminder = $rsvp("#rsvp-reminder");
@@ -93,8 +73,11 @@ async function handleRsvp(ctx: Context, form: FormData) {
   };
   // TODO: validate email
   // TODO: check for email dupes
-  await ctx.db.RPUSH(RSVP_KEY, encodeRsvp(rsvp));
+  await ctx.db.addRsvp(rsvp);
 }
+
+const PATHS = <const>["/", "/enter-password", "/rsvp"];
+type Path = (typeof PATHS)[number];
 
 async function handler(
   ctx: Context,
@@ -217,7 +200,7 @@ async function startServer() {
   const config = makeConfig();
   const logger = makeLogger(config);
   const db =
-    config.BUN_ENV === "prod" ? await makeRedis(config, logger) : makeDevDb();
+    config.BUN_ENV === "prod" ? await makeDb(config, logger) : makeDevDb();
 
   const ctx = { config, logger, db };
   const server = Bun.serve(

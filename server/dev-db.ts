@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import type { Db } from "./prod-db";
+import { type Db, type Rsvp, encodeRsvp, parseRsvp } from "./db";
 
 const RSVP_TABLE_NAME = "rsvp";
 
@@ -18,13 +18,12 @@ export function makeDevDb(): Db {
     SELECT data FROM ${RSVP_TABLE_NAME}
   `);
   return {
-    async RPUSH(_: string, value: string) {
-      insertQuery.all({ $rsvp: value });
-      return 1;
+    async addRsvp(rsvp: Rsvp) {
+      insertQuery.all({ $rsvp: encodeRsvp(rsvp) });
     },
-    async LRANGE(_0: string, _1: number, _2: number) {
+    async getRsvps() {
       const raw = readQuery.all() as { data: string }[];
-      return raw.map((item) => item.data);
+      return raw.map((item) => parseRsvp(item.data));
     },
   };
 }
