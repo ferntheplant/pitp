@@ -207,7 +207,7 @@ h3:hover:before {
 
 h4:hover:before {
   content: "###";
-  color: var(---background-color);
+  color: var(--background-color);
   padding-right: 0.5em;
 }
 

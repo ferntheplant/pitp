@@ -2,6 +2,8 @@
 
 Open source, self-hosted Partiful alternative
 
+TODO: rename this to "party at the party" lol
+
 ## Guiding Principles
 
 - one click self-hosted deploy
@@ -30,28 +32,26 @@ Open source, self-hosted Partiful alternative
 
 #### Simple Flow without Transaction Email
 
-1. `host` forks PITP GitHub repo to **private** repository
-2. `host` edits config file to have party details
-  name, date, time, location, description, party password, and admin password
-  (optional) `host` edits `style.css` to customize the look of their party page(s)
+1. `host` forks PITP GitHub repo to (possibly private) repository
+2. (optional) `host` edits `style.css` to customize the look of their party page(s)
 3. `host` clicks "Deploy to < hosting service >"
-  will use providers simple sign up and login system
-  (optional) `host` sets up custom domain with hosting service
+    - will use providers simple sign up and login system
+    - (optional) `host` sets up custom domain with hosting service
 4. `host` shares party site URL and password with `guests` through personal communications channels
 5. `guest` visits party site and is greeted with "Enter Password" view
 6. `guest` enters correct party password and is shown "Party Home" page
-  `guest` can see all party details
-  `guest` can see the number of attendees
-  `guest` can click to navigate to "RSVP Form"
+    - `guest` can see all party details
+    - `guest` can see the number of attendees
+    - `guest` can click to navigate to "RSVP Form"
 7. `guest` submits "RSVP" form
-  `guest` provides name, email, and status of "GOING", "MAYBE", "NOT GOING"
+    - `guest` provides name, email, and status of "GOING", "MAYBE", "NOT GOING"
 8. `host` visits party site URL sub-page for "admin"
 9. `host` enters correct admin password and is shown "Party Admin" page
-  `host` is shown list of all RSVPs
-  `host` is given easy mechanism to copy-paste emails for sending reminders/updates
+    - `host` is shown list of all RSVPs
+    - `host` is given easy mechanism to copy-paste emails for sending reminders/updates
 10. `host` makes update to party details by editing config file or HTML template
-  `host` commits and pushes changes to GitHub
-  party site automatically updates while maintaining existing list of RSVPs
+    - `host` commits and pushes changes to GitHub
+    - party site automatically updates while maintaining existing list of RSVPs
 
 #### Adding Transactional Email
 
@@ -64,11 +64,11 @@ Open source, self-hosted Partiful alternative
 
 - notification system for party reminders/updates
   - set up automated reminder system on deploy
-- email verification on attendees to prevent abuse
+- email/SMS verification on attendees to prevent abuse
   - enables attendee login for RSVP status updates
   - enables "forum" for party discussion among attendees
-- multiple password options for memes
-- more admin controls like editing RSVP list
+- multiple password options for meme passwords
+- more admin controls like manual editing of RSVP list
 
 ## Resources
 
@@ -77,7 +77,10 @@ Open source, self-hosted Partiful alternative
   - [Mailjet](https://www.mailjet.com/pricing/)
   - [Aha send](https://ahasend.com/pricing)
   - [Postmark](https://postmarkapp.com/pricing)
-- [Timestamp converter](https://www.timestamp-converter.com/)
+
+## Styling
+
+TODO: build admin (and password) views
 
 ## Deployment
 

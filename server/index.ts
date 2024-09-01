@@ -2,8 +2,7 @@ import type { Server } from "bun";
 
 import { type Context, serverOptions } from "./app.ts";
 import { makeConfig } from "./config.ts";
-import { makeDb } from "./db.ts";
-import { makeDevDb } from "./dev-db.ts";
+import { makeDb, makeDevDb } from "./db.ts";
 import { withHtmlLiveReload } from "./hot-reload.ts";
 import { makeLogger } from "./logger.ts";
 
@@ -14,8 +13,9 @@ async function startServer() {
   const logger = makeLogger(config);
   const db =
     config.BUN_ENV === "prod" ? await makeDb(config, logger) : makeDevDb();
+  const party = await db.getPartyConfig();
 
-  const ctx = { project: PROJECT_ROOT, config, logger, db };
+  const ctx = { project: PROJECT_ROOT, config, logger, db, party };
   const server = Bun.serve(
     config.DEBUG ? withHtmlLiveReload(serverOptions(ctx)) : serverOptions(ctx),
   );

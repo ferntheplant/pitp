@@ -1,3 +1,7 @@
+import ADMIN_TEMPLATE from "../templates/admin.html" with { type: "text" };
+import CONSTRUCTION_TEMPLATE from "../templates/construction.html" with {
+  type: "text",
+};
 import HOME_TEMPLATE from "../templates/index.html" with { type: "text" };
 import INFO_TEMPLATE from "../templates/info.html" with { type: "text" };
 import PASSWORD_TEMPLATE from "../templates/password.html" with {
@@ -9,8 +13,8 @@ import { type ServeOptions, file } from "bun";
 import * as cheerio from "cheerio";
 
 import type { Config } from "./config.ts";
-import { buildCookie, parseCookies } from "./cookies.ts";
-import type { Db, Rsvp } from "./db.ts";
+import { buildAdminCookie, buildCookie, parseCookies } from "./cookies.ts";
+import type { Db, Party, Rsvp } from "./db.ts";
 import type { Logger } from "./logger.ts";
 
 export type Context = {
@@ -18,6 +22,7 @@ export type Context = {
   config: Config;
   logger: Logger;
   db: Db;
+  party: Party | null;
 };
 
 class ServerError extends Error {
@@ -26,6 +31,21 @@ class ServerError extends Error {
     super(message);
     this.code = code;
   }
+}
+
+function buildConstructionPage() {
+  const $construction = cheerio.load(CONSTRUCTION_TEMPLATE);
+  return $construction.root().html();
+}
+
+function buildAdminPasswordView(badPassword = false) {
+  const $admin = cheerio.load(ADMIN_TEMPLATE);
+  return $admin("#admin-password-view");
+}
+
+async function buildAdminPage(ctx: Context, notification = false) {
+  const $admin = cheerio.load(ADMIN_TEMPLATE);
+  return $admin("#admin-view");
 }
 
 function buildPasswordView(badPassword = false) {
@@ -92,27 +112,34 @@ async function handler(
   if (!PATHS.includes(pathname as Path)) {
     throw new ServerError(404, "Page not found");
   }
+  if (!ctx.party) {
+    return new Response(buildConstructionPage(), {
+      headers: {
+        "Content-Type": "text/html",
+      },
+    });
+  }
   switch (pathname) {
     case "/": {
       const $index = cheerio.load(HOME_TEMPLATE);
       const cookies = parseCookies(req);
       if (
-        cookies[ctx.config.COOKIE_NAME] &&
-        cookies[ctx.config.COOKIE_NAME] === ctx.config.PARTY.password
+        cookies[ctx.party.partyCookie] &&
+        cookies[ctx.party.partyCookie] === ctx.party.password
       ) {
         const hasRsvp =
-          !!cookies[ctx.config.RSVP_COOKIE] &&
-          Boolean(cookies[ctx.config.RSVP_COOKIE]);
+          !!cookies[ctx.party.rsvpCookie] &&
+          Boolean(cookies[ctx.party.rsvpCookie]);
         $index("main").html(await buildPartyInfoPage(ctx, hasRsvp));
         return new Response($index.root().html(), {
           headers: {
             "Content-Type": "text/html",
             "Is-Page": "true",
-            "Set-Cookie": buildCookie(ctx.config),
+            "Set-Cookie": buildCookie(ctx),
           },
         });
       }
-      $index("head > title").text(ctx.config.PARTY.name);
+      $index("head > title").text(ctx.party.name);
       $index("main").html(buildPasswordView());
       return new Response($index.root().html(), {
         headers: {
@@ -127,10 +154,7 @@ async function handler(
       }
       const form = await req.formData();
       const submittedPassword = form.get("password");
-      if (
-        !submittedPassword ||
-        submittedPassword !== ctx.config.PARTY.password
-      ) {
+      if (!submittedPassword || submittedPassword !== ctx.party.password) {
         ctx.logger("debug", "User submitted wrong password");
         const passwordView = buildPasswordView(true);
         return new Response(passwordView.prop("outerHTML"), {
@@ -139,12 +163,12 @@ async function handler(
       }
       const cookies = parseCookies(req);
       const hasRsvp =
-        !!cookies[ctx.config.RSVP_COOKIE] &&
-        Boolean(cookies[ctx.config.RSVP_COOKIE]);
+        !!cookies[ctx.party.rsvpCookie] &&
+        Boolean(cookies[ctx.party.rsvpCookie]);
       return new Response((await buildPartyInfoPage(ctx, hasRsvp)).html(), {
         headers: {
           "Content-Type": "text/html",
-          "Set-Cookie": buildCookie(ctx.config),
+          "Set-Cookie": buildCookie(ctx),
         },
       });
     }
@@ -158,7 +182,54 @@ async function handler(
       return new Response((await buildPartyInfoPage(ctx, false)).html(), {
         headers: {
           "Content-Type": "text/html",
-          "Set-Cookie": buildCookie(ctx.config, true),
+          "Set-Cookie": buildCookie(ctx, true),
+        },
+      });
+    }
+    case "/admin": {
+      const $index = cheerio.load(HOME_TEMPLATE);
+      const cookies = parseCookies(req);
+      if (
+        cookies[ctx.config.ADMIN_COOKIE] &&
+        cookies[ctx.config.ADMIN_COOKIE] === ctx.config.ADMIN_PASSWORD
+      ) {
+        $index("main").html(await buildAdminPage(ctx));
+        return new Response($index.root().html(), {
+          headers: {
+            "Content-Type": "text/html",
+            "Is-Page": "true",
+            "Set-Cookie": buildCookie(ctx),
+          },
+        });
+      }
+      $index("main").html(buildAdminPasswordView());
+      return new Response($index.root().html(), {
+        headers: {
+          "Content-Type": "text/html",
+          "Is-Page": "true",
+        },
+      });
+    }
+    case "/admin-password": {
+      if (req.method !== "POST") {
+        throw new ServerError(405, "Method not allowed");
+      }
+      const form = await req.formData();
+      const submittedPassword = form.get("password");
+      if (
+        !submittedPassword ||
+        submittedPassword !== ctx.config.ADMIN_PASSWORD
+      ) {
+        ctx.logger("debug", "User submitted wrong admin password");
+        const adminPasswordView = buildAdminPasswordView(true);
+        return new Response(adminPasswordView.prop("outerHTML"), {
+          headers: { "Content-Type": "text/html" },
+        });
+      }
+      return new Response((await buildAdminPage(ctx)).html(), {
+        headers: {
+          "Content-Type": "text/html",
+          "Set-Cookie": buildAdminCookie(ctx),
         },
       });
     }
